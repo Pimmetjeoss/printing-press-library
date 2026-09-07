@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "bing-webmaster-pp-mcp",
   "display_name": "Bing Webmaster Tools",
-  "version": "1.0.0",
+  "version": "4.31.7",
   "description": "Every Bing Webmaster API endpoint, plus the SEO intelligence no other Bing tool ships: period-over-period deltas, ranking drift, quota-aware bulk submission, and Bing-vs-Google reconciliation — all backed by a local SQLite store.",
   "author": {
     "name": "CLI Printing Press"
@@ -15,16 +15,29 @@
       "command": "${__dirname}/bin/bing-webmaster-pp-mcp",
       "args": [],
       "env": {
-        "PRINTING_PRESS_CLIENT_PROFILE": "${user_config.printing_press_client_profile}"
+        "BING_WEBMASTER_API_KEY": "${user_config.bing_webmaster_api_key}",
+        "BING_WEBMASTER_BASE_URL": "${user_config.bing_webmaster_base_url}",
+        "BING_WEBMASTER_USER_AGENT": "${user_config.bing_webmaster_user_agent}"
       }
     }
   },
   "user_config": {
-    "printing_press_client_profile": {
+    "bing_webmaster_api_key": {
       "type": "string",
-      "title": "Client profile",
-      "description": "Binds the MCP server to an existing tenant-gated Printing Press client profile.",
+      "title": "BING_WEBMASTER_API_KEY",
+      "description": "Sets BING_WEBMASTER_API_KEY for the Bing Webmaster Tools MCP server. Get a credential from https://www.bing.com/webmasters.",
+      "sensitive": true,
       "required": true
+    },
+    "bing_webmaster_base_url": {
+      "type": "string",
+      "title": "BING_WEBMASTER_BASE_URL",
+      "description": "Optional. Sets BING_WEBMASTER_BASE_URL for the Bing Webmaster Tools MCP server. Per-instance, non-secret setting; not a credential."
+    },
+    "bing_webmaster_user_agent": {
+      "type": "string",
+      "title": "BING_WEBMASTER_USER_AGENT",
+      "description": "Optional. Sets BING_WEBMASTER_USER_AGENT for the Bing Webmaster Tools MCP server. Per-instance, non-secret setting; not a credential."
     }
   },
   "compatibility": {

@@ -35,6 +35,10 @@ type bPublishPlan struct {
 }
 
 func newPublishCmd(flags *rootFlags) *cobra.Command {
+	return newPublishCommand(flags, false)
+}
+
+func newPublishCommand(flags *rootFlags, planOnly bool) *cobra.Command {
 	var site, fromSitemap, fromFile string
 	var confirm bool
 	cmd := &cobra.Command{
@@ -86,17 +90,28 @@ func newPublishCmd(flags *rootFlags) *cobra.Command {
 				return err
 			}
 
-			// Live quota check (best-effort; 0 means "unknown, submit all").
-			daily := 0
-			if qdata, qerr := c.Get(cmd.Context(), "/json/GetUrlSubmissionQuota", map[string]string{"siteUrl": site}); qerr == nil {
-				if v, ok := bNum(bCIMap(qdata), "DailyQuota"); ok {
-					daily = int(v)
-				}
+			if flags.dryRun {
+				// The transport does not fetch quota during dry-run; never invent one.
+				preview := map[string]any{"dry_run": true, "total_urls": len(urls), "submitted": 0, "quota_verified": false}
+				return emitIntel(cmd, flags, preview, func() {
+					fmt.Fprintln(cmd.OutOrStdout(), "Dry-run: URLs gathered; quota not verified and no URLs submitted. Use publish plan for a live quota-backed plan.")
+				})
 			}
+
+			// Fail closed: an unavailable or exhausted quota must not permit submission.
+			qdata, qerr := c.Get(cmd.Context(), "/json/GetUrlSubmissionQuota", map[string]string{"siteUrl": site})
+			if qerr != nil {
+				return fmt.Errorf("reading submission quota: %w", qerr)
+			}
+			quota, ok := bNum(bCIMap(qdata), "DailyQuota")
+			if !ok || quota < 0 {
+				return fmt.Errorf("invalid or missing DailyQuota in Bing response")
+			}
+			daily := int(quota)
 
 			toSubmit := urls
 			skipped := 0
-			if daily > 0 && len(urls) > daily {
+			if len(urls) > daily {
 				toSubmit = urls[:daily]
 				skipped = len(urls) - daily
 			}
@@ -119,7 +134,7 @@ func newPublishCmd(flags *rootFlags) *cobra.Command {
 			}
 
 			// Print-only unless explicitly confirmed (never submits under --dry-run).
-			if !confirm || flags.dryRun {
+			if planOnly || !confirm || flags.dryRun {
 				return emitIntel(cmd, flags, plan, func() { printPublishPlan(cmd, plan, false) })
 			}
 
@@ -137,7 +152,16 @@ func newPublishCmd(flags *rootFlags) *cobra.Command {
 	cmd.Flags().StringVar(&site, "site", "", "Verified site URL (required)")
 	cmd.Flags().StringVar(&fromSitemap, "from-sitemap", "", "Sitemap URL to gather URLs from (follows one level of sitemap-index)")
 	cmd.Flags().StringVar(&fromFile, "file", "", "File with one URL per line")
-	cmd.Flags().BoolVar(&confirm, "confirm", false, "Actually submit (default: print the plan only)")
+	if planOnly {
+		cmd.Use = "plan"
+		cmd.Short = "Build a submission plan from live sitemap and quota data; never submit URLs"
+		cmd.Long = "Read a sitemap or URL file and the live Bing quota to calculate a deduplicated submission plan. This command cannot submit URLs and does not accept --confirm."
+		cmd.Example = "  bing-webmaster-pp-cli publish plan --site https://example.com --from-sitemap https://example.com/sitemap.xml"
+		cmd.Annotations = map[string]string{"mcp:read-only": "true"}
+	} else {
+		cmd.Flags().BoolVar(&confirm, "confirm", false, "Actually submit (default: print the plan only)")
+		cmd.AddCommand(newPublishCommand(flags, true))
+	}
 	return cmd
 }
 

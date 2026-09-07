@@ -16,9 +16,7 @@ func newDeeplinksCmd(flags *rootFlags) *cobra.Command {
 	}
 
 	cmd.AddCommand(newDeeplinksAddBlockCmd(flags))
-	cmd.AddCommand(newDeeplinksAlgoUrlsCmd(flags))
 	cmd.AddCommand(newDeeplinksBlocksCmd(flags))
-	cmd.AddCommand(newDeeplinksGetCmd(flags))
 	cmd.AddCommand(newDeeplinksRemoveBlockCmd(flags))
 	cmd.AddCommand(newDeeplinksUpdateCmd(flags))
 	return cmd

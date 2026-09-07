@@ -21,7 +21,7 @@ func newSubmissionFetchCmd(flags *rootFlags) *cobra.Command {
 		Use:         "fetch",
 		Short:       "Request that Bing fetch a single URL",
 		Example:     "  bing-webmaster-pp-cli submission fetch --site https://example.com/resource",
-		Annotations: map[string]string{"pp:endpoint": "submission.fetch", "pp:method": "POST", "pp:path": "/json/FetchUrl", "mcp:read-only": "true", "pp:requires-input": "true"},
+		Annotations: map[string]string{"pp:endpoint": "submission.fetch", "pp:method": "POST", "pp:path": "/json/FetchUrl", "mcp:read-only": "false", "pp:requires-input": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Bare invocation of a command with required input prints help
 			// instead of pflag's terse "required flag not set" error. Optional-
@@ -76,7 +76,8 @@ func newSubmissionFetchCmd(flags *rootFlags) *cobra.Command {
 					bodyMap["url"] = bodyUrl
 				}
 			}
-			data, statusCode, err := c.PostQueryWithParams(cmd.Context(), path, params, body)
+			// PATCH: FetchUrl schedules work; retain mutation transport safeguards.
+			data, statusCode, err := c.PostWithParams(cmd.Context(), path, params, body)
 			if err != nil {
 				return classifyAPIError(cmd.OutOrStdout(), err, flags)
 			}

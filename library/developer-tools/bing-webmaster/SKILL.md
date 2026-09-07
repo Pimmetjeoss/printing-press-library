@@ -18,6 +18,12 @@ metadata:
 
 # Bing Webmaster Tools — Printing Press CLI
 
+`publish plan` is the read-only live planner (sitemap + quota); it never accepts `--confirm`. Existing `publish --confirm` is a separate mutating path and is not live-submission-verified. Missing or exhausted quota now fails closed or produces a zero-submission plan.
+
+
+Compatibility: `sites moves`, `deeplinks get`, and `deeplinks algo-urls` are not supported. The first returned persistent live HTTP 404; the latter two return provider Deprecated errors. Live `gap` acceptance uses real Bing responses and an explicitly synthetic local GSC CSV fixture, not real Google account data.
+
+
 ## Prerequisites: Install the CLI
 
 This skill drives the `bing-webmaster-pp-cli` binary. **You must verify the CLI is installed before invoking any command from this skill.** If it is missing, install it first:
@@ -77,22 +83,6 @@ These capabilities aren't available in any other tool for this API.
   bing-webmaster-pp-cli watch --site https://example.com --agent
   ```
 
-### Submission at scale
-- **`publish`** — Submit many URLs (or a whole sitemap) for indexing, automatically chunked to the 500-per-request cap, paced against your live remaining quota, and deduped against URLs already submitted.
-
-  _Pick this over raw SubmitUrlBatch whenever submitting more than a handful of URLs; it won't blow the daily quota or resubmit._
-
-  ```bash
-  bing-webmaster-pp-cli publish --site https://example.com --from-sitemap https://example.com/sitemap.xml --dry-run
-  ```
-- **`quota`** — One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation.
-
-  _Check before any bulk submission so the agent knows how many URLs it can push today without hitting the wall._
-
-  ```bash
-  bing-webmaster-pp-cli quota --site https://example.com --agent
-  ```
-
 ### Operational triage
 - **`triage`** — Categorize crawl issues by severity, diff them against your last sync, and map each issue to the affected child URLs in one view.
 
@@ -100,6 +90,15 @@ These capabilities aren't available in any other tool for this API.
 
   ```bash
   bing-webmaster-pp-cli triage --site https://example.com --agent
+  ```
+
+### Submission at scale
+- **`quota`** — One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation.
+
+  _Check before any bulk submission so the agent knows how many URLs it can push today without hitting the wall._
+
+  ```bash
+  bing-webmaster-pp-cli quota --site https://example.com --agent
   ```
 
 ### Cross-engine intelligence
@@ -134,9 +133,7 @@ These capabilities aren't available in any other tool for this API.
 **deeplinks** — Deep link blocks (several get/update methods are obsolete in the Bing API)
 
 - `bing-webmaster-pp-cli deeplinks add-block` — Block a deep link
-- `bing-webmaster-pp-cli deeplinks algo-urls` — [OBSOLETE in Bing API] Get algorithmic deep link URLs
 - `bing-webmaster-pp-cli deeplinks blocks` — List deep link blocks for a site
-- `bing-webmaster-pp-cli deeplinks get` — [OBSOLETE in Bing API] Get deep links for a URL
 - `bing-webmaster-pp-cli deeplinks remove-block` — Remove a deep link block
 - `bing-webmaster-pp-cli deeplinks update` — [OBSOLETE in Bing API] Update a deep link weight
 
@@ -178,7 +175,6 @@ These capabilities aren't available in any other tool for this API.
 - `bing-webmaster-pp-cli sites add` — Add a new site to your account
 - `bing-webmaster-pp-cli sites add-role` — Delegate site access to another user
 - `bing-webmaster-pp-cli sites list` — List all verified sites for the current user
-- `bing-webmaster-pp-cli sites moves` — List submitted site moves (migrations) for a site
 - `bing-webmaster-pp-cli sites remove` — Remove a site from your account
 - `bing-webmaster-pp-cli sites remove-role` — Revoke a user's delegated access to a site
 - `bing-webmaster-pp-cli sites roles` — Get delegated user roles for a site
@@ -220,7 +216,6 @@ bing-webmaster-pp-cli which "<capability in your own words>"
 `which` resolves a natural-language capability query to the best matching command from this CLI's curated feature index. Exit code `0` means at least one match; exit code `2` means no confident match — fall back to `--help` or use a narrower query.
 
 ## Recipes
-
 
 ### Weekly query review, agent-friendly
 

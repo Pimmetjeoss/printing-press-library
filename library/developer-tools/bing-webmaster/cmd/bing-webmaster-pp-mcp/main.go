@@ -40,8 +40,7 @@ const (
 var version = "0.0.0-dev"
 
 func main() {
-	// Pin the learn-event surface for this process and every walker
-	// shell-out child, so usage events record surface=mcp.
+	// PATCH: preserve MCP learning-surface attribution across shell-outs.
 	_ = os.Setenv("BING_WEBMASTER_LEARN_SURFACE", "mcp")
 	if err := cli.BindMCPServerProfile(); err != nil {
 		fmt.Fprintf(os.Stderr, "MCP client-profile bind failed: %v\n", err)
@@ -186,9 +185,3 @@ func bearerTokenMatches(header, expected string) bool {
 	}
 	return subtle.ConstantTimeCompare([]byte(got), []byte(expected)) == 1
 }
-
-// Transport selection order: --transport flag, then PP_MCP_TRANSPORT env,
-// then the first transport declared in the spec (see MCPConfig.Transport).
-// The flag surface lets one binary serve stdio locally and streamable HTTP
-// when hosted in a container or remote sandbox, matching the Anthropic
-// guidance that production agents need a remote option.

@@ -1,7 +1,7 @@
 {
   "api_name": "bing-webmaster",
   "base_url": "https://ssl.bing.com/webmaster/api.svc",
-  "description": "Every Bing Webmaster API endpoint, plus the SEO intelligence no other Bing tool ships: period-over-period deltas, ranking drift, quota-aware bulk submission, and Bing-vs-Google reconciliation — all backed by a local SQLite store.",
+  "description": "The Bing Webmaster Tools API: manage sites, submit URLs, and read query/traffic/crawl/link stats from the Bing search index.",
   "mcp_ready": "full",
   "http_transport": "standard",
   "mcp": {
@@ -189,29 +189,29 @@
     },
     {
       "name": "crawl_children-info",
-      "description": "Index details for the pages under a directory. Required: site, url. Optional: page. Returns array.",
-      "method": "GET",
+      "description": "Read index details for the pages under a directory using wrapped JSON POST. Required: site, url. Optional: page. Returns array.",
+      "method": "POST",
       "path": "/json/GetChildrenUrlInfo",
       "params": [
         {
           "name": "site",
           "wire_name": "siteUrl",
           "type": "string",
-          "location": "query",
+          "location": "body",
           "description": "Verified site URL",
           "required": true
         },
         {
           "name": "url",
           "type": "string",
-          "location": "query",
+          "location": "body",
           "description": "Directory URL",
           "required": true
         },
         {
           "name": "page",
           "type": "int",
-          "location": "query",
+          "location": "body",
           "description": "Page number (paged results)"
         }
       ]
@@ -348,22 +348,6 @@
       ]
     },
     {
-      "name": "deeplinks_algo-urls",
-      "description": "[OBSOLETE in Bing API] Get algorithmic deep link URLs. Required: site. Returns array.",
-      "method": "GET",
-      "path": "/json/GetDeepLinkAlgoUrls",
-      "params": [
-        {
-          "name": "site",
-          "wire_name": "siteUrl",
-          "type": "string",
-          "location": "query",
-          "description": "Verified site URL",
-          "required": true
-        }
-      ]
-    },
-    {
       "name": "deeplinks_blocks",
       "description": "List deep link blocks for a site. Required: site. Returns array.",
       "method": "GET",
@@ -375,29 +359,6 @@
           "type": "string",
           "location": "query",
           "description": "Verified site URL",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "deeplinks_get",
-      "description": "[OBSOLETE in Bing API] Get deep links for a URL. Required: site, url. Returns array.",
-      "method": "GET",
-      "path": "/json/GetDeepLink",
-      "params": [
-        {
-          "name": "site",
-          "wire_name": "siteUrl",
-          "type": "string",
-          "location": "query",
-          "description": "Verified site URL",
-          "required": true
-        },
-        {
-          "name": "url",
-          "type": "string",
-          "location": "query",
-          "description": "Page URL",
           "required": true
         }
       ]
@@ -1013,22 +974,6 @@
       "params": []
     },
     {
-      "name": "sites_moves",
-      "description": "List submitted site moves (migrations) for a site. Required: site. Returns array.",
-      "method": "GET",
-      "path": "/json/GetSiteMoves",
-      "params": [
-        {
-          "name": "site",
-          "wire_name": "siteUrl",
-          "type": "string",
-          "location": "query",
-          "description": "Site URL",
-          "required": true
-        }
-      ]
-    },
-    {
       "name": "sites_remove",
       "description": "Remove a site from your account. Required: site.",
       "method": "POST",
@@ -1528,7 +1473,7 @@
     {
       "name": "Query-performance delta review",
       "command": "review",
-      "description": "See which Bing queries you gained or lost, and how CTR and average position shifted, vs the previous period — not just a raw snapshot."
+      "description": "See which Bing queries you gained or lost, and how CTR and average position shifted, vs the previous period \u2014 not just a raw snapshot."
     },
     {
       "name": "Ranking-drift detection",
@@ -1548,7 +1493,7 @@
     {
       "name": "Submission quota intelligence",
       "command": "quota",
-      "description": "One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation."
+      "description": "One view of URL and content submission quota \u2014 daily and monthly remaining \u2014 plus a pacing recommendation."
     },
     {
       "name": "Bing-vs-Google coverage gap",

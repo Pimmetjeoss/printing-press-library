@@ -137,18 +137,6 @@ resources:
             description: "Site role to remove"
         response:
           type: object
-      moves:
-        method: GET
-        path: "/json/GetSiteMoves"
-        description: "List submitted site moves (migrations) for a site"
-        params:
-          - name: siteUrl
-            flag_name: site
-            type: string
-            required: true
-            description: "Site URL"
-        response:
-          type: array
       submit-move:
         method: POST
         path: "/json/SubmitSiteMove"
@@ -448,10 +436,10 @@ resources:
         response:
           type: object
       children-info:
-        method: GET
+        method: POST
         path: "/json/GetChildrenUrlInfo"
-        description: "Index details for the pages under a directory"
-        params:
+        description: "Read index details for the pages under a directory using wrapped JSON POST"
+        body:
           - name: siteUrl
             flag_name: site
             type: string
@@ -753,34 +741,6 @@ resources:
   deeplinks:
     description: "Deep link blocks (several get/update methods are obsolete in the Bing API)"
     endpoints:
-      get:
-        method: GET
-        path: "/json/GetDeepLink"
-        description: "[OBSOLETE in Bing API] Get deep links for a URL"
-        params:
-          - name: siteUrl
-            flag_name: site
-            type: string
-            required: true
-            description: "Verified site URL"
-          - name: url
-            type: string
-            required: true
-            description: "Page URL"
-        response:
-          type: array
-      algo-urls:
-        method: GET
-        path: "/json/GetDeepLinkAlgoUrls"
-        description: "[OBSOLETE in Bing API] Get algorithmic deep link URLs"
-        params:
-          - name: siteUrl
-            flag_name: site
-            type: string
-            required: true
-            description: "Verified site URL"
-        response:
-          type: array
       update:
         method: POST
         path: "/json/UpdateDeepLink"

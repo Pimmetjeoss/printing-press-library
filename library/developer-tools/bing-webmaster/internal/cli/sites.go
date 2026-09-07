@@ -18,7 +18,6 @@ func newSitesCmd(flags *rootFlags) *cobra.Command {
 	cmd.AddCommand(newSitesAddCmd(flags))
 	cmd.AddCommand(newSitesAddRoleCmd(flags))
 	cmd.AddCommand(newSitesListCmd(flags))
-	cmd.AddCommand(newSitesMovesCmd(flags))
 	cmd.AddCommand(newSitesRemoveCmd(flags))
 	cmd.AddCommand(newSitesRemoveRoleCmd(flags))
 	cmd.AddCommand(newSitesRolesCmd(flags))

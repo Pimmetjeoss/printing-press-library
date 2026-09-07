@@ -188,15 +188,15 @@ var codeOrchEndpoints = []codeOrchEndpoint{
 	},
 	{
 		ID:             "crawl.children-info",
-		Method:         "GET",
+		Method:         "POST",
 		Path:           "/json/GetChildrenUrlInfo",
-		Summary:        "Index details for the pages under a directory",
+		Summary:        "Read index details for the pages under a directory using wrapped JSON POST",
 		Positional:     []string{},
 		TemplateParams: []codeOrchParamBinding{},
-		QueryParams:    []codeOrchParamBinding{{PublicName: "site", WireName: "siteUrl"}, {PublicName: "url", WireName: "url"}, {PublicName: "page", WireName: "page"}},
+		QueryParams:    []codeOrchParamBinding{},
 		HeaderParams:   []codeOrchParamBinding{},
 		Mutating:       false,
-		keywords:       codeOrchKeywords("crawl", "children-info", "Index details for the pages under a directory", "/json/GetChildrenUrlInfo"),
+		keywords:       codeOrchKeywords("crawl", "children-info", "Read index details for the pages under a directory using wrapped JSON POST", "/json/GetChildrenUrlInfo"),
 	},
 	{
 		ID:             "crawl.issues",
@@ -271,18 +271,6 @@ var codeOrchEndpoints = []codeOrchEndpoint{
 		keywords:       codeOrchKeywords("deeplinks", "add-block", "Block a deep link", "/json/AddDeepLinkBlock"),
 	},
 	{
-		ID:             "deeplinks.algo-urls",
-		Method:         "GET",
-		Path:           "/json/GetDeepLinkAlgoUrls",
-		Summary:        "[OBSOLETE in Bing API] Get algorithmic deep link URLs",
-		Positional:     []string{},
-		TemplateParams: []codeOrchParamBinding{},
-		QueryParams:    []codeOrchParamBinding{{PublicName: "site", WireName: "siteUrl"}},
-		HeaderParams:   []codeOrchParamBinding{},
-		Mutating:       false,
-		keywords:       codeOrchKeywords("deeplinks", "algo-urls", "[OBSOLETE in Bing API] Get algorithmic deep link URLs", "/json/GetDeepLinkAlgoUrls"),
-	},
-	{
 		ID:             "deeplinks.blocks",
 		Method:         "GET",
 		Path:           "/json/GetDeepLinkBlocks",
@@ -293,18 +281,6 @@ var codeOrchEndpoints = []codeOrchEndpoint{
 		HeaderParams:   []codeOrchParamBinding{},
 		Mutating:       false,
 		keywords:       codeOrchKeywords("deeplinks", "blocks", "List deep link blocks for a site", "/json/GetDeepLinkBlocks"),
-	},
-	{
-		ID:             "deeplinks.get",
-		Method:         "GET",
-		Path:           "/json/GetDeepLink",
-		Summary:        "[OBSOLETE in Bing API] Get deep links for a URL",
-		Positional:     []string{},
-		TemplateParams: []codeOrchParamBinding{},
-		QueryParams:    []codeOrchParamBinding{{PublicName: "site", WireName: "siteUrl"}, {PublicName: "url", WireName: "url"}},
-		HeaderParams:   []codeOrchParamBinding{},
-		Mutating:       false,
-		keywords:       codeOrchKeywords("deeplinks", "get", "[OBSOLETE in Bing API] Get deep links for a URL", "/json/GetDeepLink"),
 	},
 	{
 		ID:             "deeplinks.remove-block",
@@ -581,18 +557,6 @@ var codeOrchEndpoints = []codeOrchEndpoint{
 		HeaderParams:   []codeOrchParamBinding{},
 		Mutating:       false,
 		keywords:       codeOrchKeywords("sites", "list", "List all verified sites for the current user", "/json/GetUserSites"),
-	},
-	{
-		ID:             "sites.moves",
-		Method:         "GET",
-		Path:           "/json/GetSiteMoves",
-		Summary:        "List submitted site moves (migrations) for a site",
-		Positional:     []string{},
-		TemplateParams: []codeOrchParamBinding{},
-		QueryParams:    []codeOrchParamBinding{{PublicName: "site", WireName: "siteUrl"}},
-		HeaderParams:   []codeOrchParamBinding{},
-		Mutating:       false,
-		keywords:       codeOrchKeywords("sites", "moves", "List submitted site moves (migrations) for a site", "/json/GetSiteMoves"),
 	},
 	{
 		ID:             "sites.remove",
@@ -1109,6 +1073,21 @@ func handleCodeOrchExecute(ctx context.Context, req mcplib.CallToolRequest) (*mc
 			data, _, err = c.DeleteWithParams(ctx, path, query)
 		}
 	case "POST":
+		// PATCH: Bing's directory read uses wrapped POST with typed defaults.
+		if ep.ID == "crawl.children-info" {
+			if site, ok := params["site"]; ok {
+				params["siteUrl"] = site
+				delete(params, "site")
+			}
+			if _, ok := params["page"]; !ok {
+				params["page"] = 0
+			}
+			if _, ok := params["filterProperties"]; !ok {
+				params["filterProperties"] = map[string]int{"CrawlDateFilter": 0, "DiscoveredDateFilter": 0, "DocFlagsFilters": 0, "HttpCodeFilters": 0}
+			}
+			data, _, err = c.PostQueryWithParams(ctx, path, nil, params)
+			break
+		}
 		body := writeBody()
 		if len(hdrs) > 0 {
 			data, _, err = c.PostWithHeaders(ctx, path, body, hdrs)

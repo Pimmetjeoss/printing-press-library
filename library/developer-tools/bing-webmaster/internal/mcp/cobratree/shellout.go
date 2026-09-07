@@ -201,16 +201,23 @@ var blockedDestinationFlags = map[string]bool{
 
 // blockedRootFlags are root-level CLI flags that an MCP client must not be
 // able to override via structured tool parameters. Allowing them lets a
-// caller swap auth credentials, redirect the API base URL, load a malicious
-// config file, or change the delivery target — all of which sit outside the
-// per-command surface the agent is supposed to be calling.
+// caller swap auth credentials, redirect the API base URL, select a different
+// per-client filesystem, relocate the config/data/state/cache roots, load a
+// malicious config file, change receipt destinations, or change the delivery
+// target, all of which sit outside the per-command surface the agent is
+// supposed to be calling.
 var blockedRootFlags = map[string]bool{
-	"args":     true,
-	"base-url": true,
-	"config":   true,
-	"deliver":  true,
-	"profile":  true,
-	"token":    true,
+	"args":         true, // PATCH: raw positional carrier must not become a CLI flag.
+	"audit-dir":    true,
+	"base-url":     true,
+	"client":       true,
+	"config":       true,
+	"deliver":      true,
+	"home":         true,
+	"insecure":     true,
+	"profile":      true,
+	"receipt-file": true,
+	"token":        true,
 }
 
 func cliArgsFromMCP(args map[string]any, blocked map[string]bool) []string {
@@ -356,28 +363,4 @@ func stderrHintLines(stderr string) []string {
 		}
 	}
 	return hints
-}
-
-// splitShellArgs whitespace-splits with double-quoted-token preservation.
-func splitShellArgs(s string) []string {
-	var tokens []string
-	var cur []rune
-	inQuote := false
-	for _, r := range s {
-		switch {
-		case r == '"':
-			inQuote = !inQuote
-		case (r == ' ' || r == '\t') && !inQuote:
-			if len(cur) > 0 {
-				tokens = append(tokens, string(cur))
-				cur = cur[:0]
-			}
-		default:
-			cur = append(cur, r)
-		}
-	}
-	if len(cur) > 0 {
-		tokens = append(tokens, string(cur))
-	}
-	return tokens
 }

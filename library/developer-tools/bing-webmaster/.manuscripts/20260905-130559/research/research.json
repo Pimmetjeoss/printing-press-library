@@ -93,12 +93,12 @@
       "group": "Local state that compounds"
     },
     {
-      "name": "Quota-aware bulk submit + publish pipeline",
-      "command": "publish",
-      "description": "Submit many URLs (or a whole sitemap) for indexing, automatically chunked to the 500-per-request cap, paced against your live remaining quota, and deduped against URLs already submitted.",
-      "rationale": "Combines the 500-URL batch cap, live GetUrlSubmissionQuota, and the local record of prior submissions — no tool unifies these.",
-      "example": "bing-webmaster-pp-cli publish --site https://example.com --from-sitemap https://example.com/sitemap.xml --dry-run",
-      "why_it_matters": "Pick this over raw SubmitUrlBatch whenever submitting more than a handful of URLs; it won't blow the daily quota or resubmit.",
+      "name": "Quota-aware submission planning",
+      "command": "publish plan",
+      "description": "Read a real sitemap or URL file and live Bing quota, deduplicate the supplied URLs, and calculate quota-capped batches without submitting anything.",
+      "rationale": "Separates safe agent planning from the explicit publish --confirm mutation.",
+      "example": "bing-webmaster-pp-cli publish plan --site https://example.com --from-sitemap https://example.com/sitemap.xml",
+      "why_it_matters": "Inspect batches and remaining quota before explicitly authorizing submission. Live acceptance covers planning only; submission is not claimed live-verified.",
       "group": "Submission at scale"
     },
     {
@@ -165,15 +165,6 @@
       "example": "bing-webmaster-pp-cli drift --site https://example.com --top 20 --agent",
       "why_it_matters": "Use when an agent must explain why traffic moved — drift points at the exact queries/pages that re-ranked.",
       "group": "Local state that compounds"
-    },
-    {
-      "name": "Quota-aware bulk submit + publish pipeline",
-      "command": "publish",
-      "description": "Submit many URLs (or a whole sitemap) for indexing, automatically chunked to the 500-per-request cap, paced against your live remaining quota, and deduped against URLs already submitted.",
-      "rationale": "Combines the 500-URL batch cap, live GetUrlSubmissionQuota, and the local record of prior submissions — no tool unifies these.",
-      "example": "bing-webmaster-pp-cli publish --site https://example.com --from-sitemap https://example.com/sitemap.xml --dry-run",
-      "why_it_matters": "Pick this over raw SubmitUrlBatch whenever submitting more than a handful of URLs; it won't blow the daily quota or resubmit.",
-      "group": "Submission at scale"
     },
     {
       "name": "Crawl-error triage",
@@ -299,11 +290,5 @@
       "use bing webmaster",
       "run bing-webmaster"
     ]
-  },
-  "reprint_of": {
-    "run_id": "20260616-212356",
-    "printing_press_version": "4.3.0",
-    "research_mode": "redo",
-    "prior_research_reverified": "done 2026-09-05: /json/* surface unchanged; SOAP/POX retired 2026-08-31 (spec is JSON-only); OAuth2 noted as alternative; 3 deep-link OBSOLETE markers kept"
   }
 }

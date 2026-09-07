@@ -4,6 +4,18 @@
 
 The most complete Bing Webmaster CLI: all 60 documented API methods as composable commands, with offline FTS search, read-only SQL, and agent-native output. On top of raw endpoints it layers what SEOs actually need — `review` for weekly query deltas, `drift` for ranking movement, `publish` for quota-paced bulk indexing, `triage` for crawl-error prioritization, and `gap` to reconcile Bing against Google Search Console.
 
+## Compatibility and live-test limitations
+
+- Removed `deeplinks get` and `deeplinks algo-urls` from CLI/MCP discovery: Bing marks these operations obsolete and credentialed calls return `ErrorCode: 16` (`Deprecated`). This is a breaking removal, not a successful live test of those retired endpoints.
+- Removed `sites moves` from the supported CLI/MCP surface by operator approval: the documented `GetSiteMoves` route consistently returned HTTP 404 with valid owned-site credentials. This is a disclosed capability limitation, not evidence of permanent Microsoft retirement and not a passing test of that endpoint.
+- `testdata/synthetic-gsc-queries.csv` is fabricated test input, not a Google Search Console export. The live `gap` test combines that local parser fixture with actual Bing API responses; it does not validate real Google account coverage.
+- Live fixture discovery accepts `BING_WEBMASTER_TEST_SITE`, `BING_WEBMASTER_TEST_QUERY`, `BING_WEBMASTER_TEST_FEED`, and `BING_WEBMASTER_TEST_GSC`. These affect test arguments only, not normal command defaults. Use an owned site, a real sitemap, and an absolute CSV path. Mutation tests stay dry-run only.
+
+
+**Bing Webmaster API commands, plus the SEO intelligence no other Bing tool ships: period-over-period deltas, ranking drift, quota-aware bulk submission, and Bing-vs-Google reconciliation — all backed by a local SQLite store.**
+
+The most complete Bing Webmaster CLI: supported documented API methods as composable commands, with offline FTS search, read-only SQL, and agent-native output. On top of raw endpoints it layers what SEOs actually need — `review` for weekly query deltas, `drift` for ranking movement, `publish` for quota-paced bulk indexing, `triage` for crawl-error prioritization, and `gap` to reconcile Bing against Google Search Console.
+
 Learn more at [Bing Webmaster Tools](https://www.bing.com/webmasters).
 
 Printed by [@Pimmetjeoss](https://github.com/Pimmetjeoss) (Pimmetjeoss).
@@ -64,24 +76,24 @@ Install the pp-bing-webmaster skill from https://github.com/mvanhorn/printing-pr
 
 Authentication uses a single Bing Webmaster API key passed as the `apikey` query parameter. The key is per-user (it covers every site you've verified), not per-site. Get it at bing.com/webmasters → Settings → API Access → Generate API Key, then set it as the BING_WEBMASTER_API_KEY environment variable. Run `doctor` to confirm the key is valid and the API is reachable.
 
+## Credentialed live-test fixtures
+
+Set `BING_WEBMASTER_TEST_SITE` to a site verified for your API key before running Printing Press live dogfood. This optional environment variable supplies `pp:happy-args` metadata for `drift` and `crawl children-info`, replacing documentation-only example URLs during test discovery. It does not change normal CLI flag defaults or authorize writes. Keep the value out of public proof output when it identifies a private account.
+
 ## Quick Start
 
 ```bash
 # Confirm BING_WEBMASTER_API_KEY is set and the API is reachable before anything else.
 bing-webmaster-pp-cli doctor
 
-
 # List the sites your key can manage and pick a default.
 bing-webmaster-pp-cli sites list
-
 
 # Pull current top query stats for a site (may be empty below Bing's data threshold).
 bing-webmaster-pp-cli traffic queries --site https://example.com
 
-
 # Capture a baseline and see what changed in query performance — run again later to get deltas.
 bing-webmaster-pp-cli review --site https://example.com --days 7
-
 
 # Check remaining submission quota before a bulk push.
 bing-webmaster-pp-cli quota --site https://example.com
@@ -122,22 +134,6 @@ These capabilities aren't available in any other tool for this API.
   bing-webmaster-pp-cli watch --site https://example.com --agent
   ```
 
-### Submission at scale
-- **`publish`** — Submit many URLs (or a whole sitemap) for indexing, automatically chunked to the 500-per-request cap, paced against your live remaining quota, and deduped against URLs already submitted.
-
-  _Pick this over raw SubmitUrlBatch whenever submitting more than a handful of URLs; it won't blow the daily quota or resubmit._
-
-  ```bash
-  bing-webmaster-pp-cli publish --site https://example.com --from-sitemap https://example.com/sitemap.xml --dry-run
-  ```
-- **`quota`** — One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation.
-
-  _Check before any bulk submission so the agent knows how many URLs it can push today without hitting the wall._
-
-  ```bash
-  bing-webmaster-pp-cli quota --site https://example.com --agent
-  ```
-
 ### Operational triage
 - **`triage`** — Categorize crawl issues by severity, diff them against your last sync, and map each issue to the affected child URLs in one view.
 
@@ -145,6 +141,15 @@ These capabilities aren't available in any other tool for this API.
 
   ```bash
   bing-webmaster-pp-cli triage --site https://example.com --agent
+  ```
+
+### Submission at scale
+- **`quota`** — One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation.
+
+  _Check before any bulk submission so the agent knows how many URLs it can push today without hitting the wall._
+
+  ```bash
+  bing-webmaster-pp-cli quota --site https://example.com --agent
   ```
 
 ### Cross-engine intelligence
@@ -155,6 +160,40 @@ These capabilities aren't available in any other tool for this API.
   ```bash
   bing-webmaster-pp-cli gap --site https://example.com --gsc ./gsc-queries.csv --agent
   ```
+
+## Recipes
+
+### Weekly query review, agent-friendly
+
+```bash
+bing-webmaster-pp-cli review --site https://example.com --days 7 --agent --select gained,lost,position_delta
+```
+
+Returns only the changed-query summary fields so an agent doesn't parse the full stats payload.
+
+### Quota-paced sitemap submission (dry run first)
+
+```bash
+bing-webmaster-pp-cli publish --site https://example.com --from-sitemap https://example.com/sitemap.xml --dry-run
+```
+
+Shows exactly which URLs would be submitted, chunked to 500 and capped at remaining quota, before sending anything.
+
+### Crawl-error triage since last sync
+
+```bash
+bing-webmaster-pp-cli triage --site https://example.com --agent
+```
+
+Prioritized, deduped crawl issues with affected URLs — a worklist, not a raw dump.
+
+### Find Bing gaps vs Google
+
+```bash
+bing-webmaster-pp-cli gap --site https://example.com --gsc ./gsc-queries.csv --agent
+```
+
+Joins a GSC performance export with Bing stats to surface cross-engine ranking gaps.
 
 ## Usage
 
@@ -189,9 +228,7 @@ Read crawl stats and issues, and manage crawl settings
 Deep link blocks (several get/update methods are obsolete in the Bing API)
 
 - **`bing-webmaster-pp-cli deeplinks add-block`** - Block a deep link
-- **`bing-webmaster-pp-cli deeplinks algo-urls`** - [OBSOLETE in Bing API] Get algorithmic deep link URLs
 - **`bing-webmaster-pp-cli deeplinks blocks`** - List deep link blocks for a site
-- **`bing-webmaster-pp-cli deeplinks get`** - [OBSOLETE in Bing API] Get deep links for a URL
 - **`bing-webmaster-pp-cli deeplinks remove-block`** - Remove a deep link block
 - **`bing-webmaster-pp-cli deeplinks update`** - [OBSOLETE in Bing API] Update a deep link weight
 
@@ -245,7 +282,6 @@ Manage and inspect the sites your API key controls
 - **`bing-webmaster-pp-cli sites add`** - Add a new site to your account
 - **`bing-webmaster-pp-cli sites add-role`** - Delegate site access to another user
 - **`bing-webmaster-pp-cli sites list`** - List all verified sites for the current user
-- **`bing-webmaster-pp-cli sites moves`** - List submitted site moves (migrations) for a site
 - **`bing-webmaster-pp-cli sites remove`** - Remove a site from your account
 - **`bing-webmaster-pp-cli sites remove-role`** - Revoke a user's delegated access to a site
 - **`bing-webmaster-pp-cli sites roles`** - Get delegated user roles for a site
@@ -411,13 +447,10 @@ Environment variables:
 - Run the `list` command to see available items
 
 ### API-specific
-
 - **doctor reports InvalidApiKey** — Regenerate the key at bing.com/webmasters → Settings → API Access and re-export BING_WEBMASTER_API_KEY; the key is per-user and only one is active at a time.
 - **Query stats come back empty** — This is expected when a site is below Bing's data threshold — it is valid, not an error. Verify with a higher-traffic site or wait for more data.
 - **URL submission returns HTTP 403** — Usually upstream WAF/Bingbot blocking rather than the API. Confirm Bingbot is allowed in robots.txt and not blocked by your CDN/WAF.
 - **Submission rejected for quota** — Run `quota` to see remaining daily/monthly allowance; new sites get far less than the 10,000/day headline. Quota resets at midnight GMT.
-
----
 
 ## Sources & Inspiration
 

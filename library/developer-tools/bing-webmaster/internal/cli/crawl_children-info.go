@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,7 @@ func newCrawlChildrenInfoCmd(flags *rootFlags) *cobra.Command {
 		Use:         "children-info",
 		Short:       "Index details for the pages under a directory",
 		Example:     "  bing-webmaster-pp-cli crawl children-info --site https://example.com/resource --url https://example.com/resource",
-		Annotations: map[string]string{"pp:endpoint": "crawl.children-info", "pp:method": "GET", "pp:path": "/json/GetChildrenUrlInfo", "mcp:read-only": "true", "pp:requires-input": "true"},
+		Annotations: map[string]string{"pp:endpoint": "crawl.children-info", "pp:method": "POST", "pp:path": "/json/GetChildrenUrlInfo", "mcp:read-only": "true", "pp:requires-input": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Bare invocation of a command with required input prints help
 			// instead of pflag's terse "required flag not set" error. Optional-
@@ -51,17 +52,24 @@ func newCrawlChildrenInfoCmd(flags *rootFlags) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params := map[string]string{}
-			if flagSiteUrl != "" {
-				params["siteUrl"] = formatCLIParamValue(flagSiteUrl)
-			}
-			if flagUrl != "" {
-				params["url"] = formatCLIParamValue(flagUrl)
-			}
+			// PATCH: Bing exposes this read via wrapped POST, not GET.
+			// https://learn.microsoft.com/dotnet/api/microsoft.bing.webmaster.api.interfaces.iwebmasterapi.getchildrenurlinfo
+			page := uint64(0)
 			if flagPage != "" {
-				params["page"] = formatCLIParamValue(flagPage)
+				page, err = strconv.ParseUint(flagPage, 10, 16)
+				if err != nil {
+					return usageErr(fmt.Errorf("page must be an integer from 0 to 65535"))
+				}
 			}
-			data, prov, err := resolveReadWithStrategyAndResponsePath(cmd.Context(), c, flags, "auto", "crawl", false, path, params, nil, "", cmd.ErrOrStderr())
+			if flags.dataSource == "local" && !flags.dryRun {
+				return fmt.Errorf("children-info requires live data; use --data-source live")
+			}
+			body := map[string]any{"siteUrl": flagSiteUrl, "url": flagUrl, "page": page, "filterProperties": map[string]int{"CrawlDateFilter": 0, "DiscoveredDateFilter": 0, "DocFlagsFilters": 0, "HttpCodeFilters": 0}}
+			data, _, err := c.PostQueryWithParams(cmd.Context(), path, nil, body)
+			prov := DataProvenance{Source: "live"}
+			if flags.dryRun {
+				prov.Source = "dry-run"
+			}
 			if err != nil {
 				return classifyAPIError(cmd.OutOrStdout(), err, flags)
 			}

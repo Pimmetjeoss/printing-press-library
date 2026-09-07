@@ -304,6 +304,15 @@ func newRootCmd(flags *rootFlags) *cobra.Command {
 		Short: `Manage Bing indexing and read SEO performance from the terminal — all 60 Webmaster API methods plus query deltas, ranking drift, and quota-paced submission.`,
 		Long: `Manage Bing indexing and read SEO performance from the terminal — all 60 Webmaster API methods plus query deltas, ranking drift, and quota-paced submission.
 
+Highlights (not in the official API docs):
+  • review   See which Bing queries you gained or lost, and how CTR and average position shifted, vs the previous period — not just a raw snapshot.
+  • drift   Track average-position movement per query and page over time and surface the biggest climbers and droppers.
+  • triage   Categorize crawl issues by severity, diff them against your last sync, and map each issue to the affected child URLs in one view.
+  • quota   One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation.
+  • gap   Reconcile your Bing query/page performance against a Google Search Console export to find queries and pages you rank for on one engine but not the other.
+  • feed-health   Track submitted, discovered, and indexed counts for each feed over time and flag drops.
+  • watch   Diff the latest sync against the previous one and surface indexation, crawl, and impression regressions per site.
+
 Add --agent to any command for JSON output + non-interactive mode.
 Run 'bing-webmaster-pp-cli doctor' to verify auth and connectivity.`,
 		SilenceUsage: true,
@@ -498,6 +507,8 @@ Run 'bing-webmaster-pp-cli doctor' to verify auth and connectivity.`,
 	rootCmd.AddCommand(newTriageCmd(flags))
 	rootCmd.AddCommand(newWatchCmd(flags))
 
+	// PATCH: Keep credentialed test targets out of public examples.
+	configureLiveSiteFixtures(rootCmd)
 	return rootCmd
 }
 

@@ -35,9 +35,9 @@ func TestDeclaredAPISurfaceReachable(t *testing.T) {
 		"crawl url-info",
 		"deeplinks",
 		"deeplinks add-block",
-		"deeplinks algo-urls",
+
 		"deeplinks blocks",
-		"deeplinks get",
+
 		"deeplinks remove-block",
 		"deeplinks update",
 		"feeds",
@@ -67,7 +67,6 @@ func TestDeclaredAPISurfaceReachable(t *testing.T) {
 		"sites add",
 		"sites add-role",
 		"sites list",
-		"sites moves",
 		"sites remove",
 		"sites remove-role",
 		"sites roles",

@@ -26,7 +26,15 @@ type whichEntry struct {
 // its hero features. Endpoint-level commands are discoverable via
 // `--help`; `which` exists to resolve a natural-language capability
 // query to one of the commands the skill says matter most.
-var whichIndex = []whichEntry{}
+var whichIndex = []whichEntry{
+	{Command: "review", Description: "See which Bing queries you gained or lost, and how CTR and average position shifted, vs the previous period — not just a raw snapshot.", Group: "Local state that compounds", WhyItMatters: "Reach for this for a weekly SEO standup instead of eyeballing raw GetQueryStats; it tells the agent what actually changed."},
+	{Command: "drift", Description: "Track average-position movement per query and page over time and surface the biggest climbers and droppers.", Group: "Local state that compounds", WhyItMatters: "Use when an agent must explain why traffic moved — drift points at the exact queries/pages that re-ranked."},
+	{Command: "triage", Description: "Categorize crawl issues by severity, diff them against your last sync, and map each issue to the affected child URLs in one view.", Group: "Operational triage", WhyItMatters: "Use to turn a raw GetCrawlIssues dump into a prioritized, what-changed-since-last-time worklist."},
+	{Command: "quota", Description: "One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation.", Group: "Submission at scale", WhyItMatters: "Check before any bulk submission so the agent knows how many URLs it can push today without hitting the wall."},
+	{Command: "gap", Description: "Reconcile your Bing query/page performance against a Google Search Console export to find queries and pages you rank for on one engine but not the other.", Group: "Cross-engine intelligence", WhyItMatters: "Use to find low-effort wins: pages already strong on Google that are missing from Bing (and vice-versa)."},
+	{Command: "feed-health", Description: "Track submitted, discovered, and indexed counts for each feed over time and flag drops.", Group: "Local state that compounds", WhyItMatters: "Use to catch a sitemap that silently stopped being indexed before it tanks traffic."},
+	{Command: "watch", Description: "Diff the latest sync against the previous one and surface indexation, crawl, and impression regressions per site.", Group: "Local state that compounds", WhyItMatters: "Run after each scheduled sync so the agent gets a single 'what regressed' digest instead of re-reading everything."},
+}
 
 // whichMatch pairs an index entry with its ranking score for a query.
 // Higher score means stronger match. The ranker is naive (exact token

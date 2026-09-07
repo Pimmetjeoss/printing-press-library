@@ -847,15 +847,12 @@ func handleContext(_ context.Context, _ mcplib.CallToolRequest) (*mcplib.CallToo
 		"api":         "bing-webmaster",
 		"description": "Manage Bing indexing and read SEO performance from the terminal — all 60 Webmaster API methods plus query deltas, ranking drift, and quota-paced submission.",
 		"archetype":   "generic",
-		"tool_count":  62,
-		"paths":       paths,
+		"tool_count":  60,
+		// PATCH: retain the shared recall protocol on the MCP context surface.
+		"learn_protocol": learn.RecallFirstProtocol,
+		"paths":          paths,
 		// tool_surface tells agents which surface a capability lives on.
 		"tool_surface": "MCP exposes typed endpoint tools plus a runtime mirror of user-facing CLI commands. Endpoint tools keep typed schemas; command-mirror tools shell out to the companion bing-webmaster-pp-cli binary.",
-		// learn_protocol is generated from the single shared source of
-		// truth (the exported constant internal/learn.RecallFirstProtocol)
-		// also consumed by the CLI agent-context command, so the MCP and
-		// CLI agent surfaces cannot drift.
-		"learn_protocol": learn.RecallFirstProtocol,
 		"auth": map[string]any{
 			"type": "api_key",
 			"env_vars": []map[string]any{
@@ -890,7 +887,7 @@ func handleContext(_ context.Context, _ mcplib.CallToolRequest) (*mcplib.CallToo
 			{
 				"name":        "deeplinks",
 				"description": "Deep link blocks (several get/update methods are obsolete in the Bing API)",
-				"endpoints":   []string{"add-block", "algo-urls", "blocks", "get", "remove-block", "update"},
+				"endpoints":   []string{"add-block", "blocks", "remove-block", "update"},
 				"syncable":    true,
 				"searchable":  true,
 				"writable":    true,
@@ -965,6 +962,28 @@ func handleContext(_ context.Context, _ mcplib.CallToolRequest) (*mcplib.CallToo
 			"Use the search tool for full-text search across all synced resources. Faster than iterating list endpoints.",
 			"Prefer sql/search over repeated API calls when the data is already synced.",
 		},
+		// Command-mirror capabilities are exposed through MCP by shelling out
+		// to the companion CLI binary.
+		"command_mirror_capabilities": []map[string]string{
+			{"name": "Query-performance delta review", "command": "review", "description": "See which Bing queries you gained or lost, and how CTR and average position shifted", "rationale": "", "via": "mcp-command-mirror"},
+			{"name": "Ranking-drift detection", "command": "drift", "description": "Track average-position movement per query and page over time and surface the biggest climbers and droppers.", "rationale": "", "via": "mcp-command-mirror"},
+			{"name": "Quota-aware bulk submit + publish pipeline", "command": "publish", "description": "Submit many URLs (or a whole sitemap) for indexing, automatically chunked to the 500-per-request cap", "rationale": "", "via": "mcp-command-mirror"},
+			{"name": "Crawl-error triage", "command": "triage", "description": "Categorize crawl issues by severity, diff them against your last sync", "rationale": "", "via": "mcp-command-mirror"},
+			{"name": "Submission quota intelligence", "command": "quota", "description": "One view of URL and content submission quota — daily and monthly remaining — plus a pacing recommendation.", "rationale": "", "via": "mcp-command-mirror"},
+			{"name": "Bing-vs-Google coverage gap", "command": "gap", "description": "Reconcile your Bing query/page performance against a Google Search Console export to find queries and pages you rank", "rationale": "", "via": "mcp-command-mirror"},
+			{"name": "Feed/sitemap health monitor", "command": "feed-health", "description": "Track submitted, discovered, and indexed counts for each feed over time and flag drops.", "rationale": "", "via": "mcp-command-mirror"},
+			{"name": "Indexation watch", "command": "watch", "description": "Diff the latest sync against the previous one and surface indexation, crawl, and impression regressions per site.", "rationale": "", "via": "mcp-command-mirror"},
+		},
+		"playbook": []map[string]string{
+			{"topic": "Query-performance delta review", "insight": ""},
+			{"topic": "Ranking-drift detection", "insight": ""},
+			{"topic": "Quota-aware bulk submit + publish pipeline", "insight": ""},
+			{"topic": "Crawl-error triage", "insight": ""},
+			{"topic": "Submission quota intelligence", "insight": ""},
+			{"topic": "Bing-vs-Google coverage gap", "insight": ""},
+			{"topic": "Feed/sitemap health monitor", "insight": ""},
+			{"topic": "Indexation watch", "insight": ""},
+		},
 	}
 	return toolResultJSON(ctx)
 }
@@ -974,9 +993,4 @@ func handleContext(_ context.Context, _ mcplib.CallToolRequest) (*mcplib.CallToo
 // includes the runtime Cobra-tree mirror.
 func RegisterNovelFeatureTools(s *server.MCPServer) {
 	_ = s
-}
-
-func dbPath() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".local", "share", "bing-webmaster-pp-cli", "data.db")
 }
